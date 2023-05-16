@@ -6,7 +6,7 @@ module.exports = function(app) {
   const router = express.Router();
   const Twit = require('twit');
   const db = require('./auradb');  // Import your database operations
-  const { saveCommonUsersToNeo4j, addParticipantToSession } = require('./auradb');
+  const { saveCommonUsersToNeo4j, addParticipantToSession, addParticipantAndFetchNewData } = require('./auradb');
 
   const T = new Twit({
     consumer_key:         process.env.TWITTER_CONSUMER_KEY,
@@ -123,7 +123,7 @@ module.exports = function(app) {
       res.status(500).send(err);
     }
   });
-
+  
   router.get('/session/')
 
   router.get('/session/:sessionName', async (req, res) => {
@@ -142,25 +142,27 @@ module.exports = function(app) {
       console.log(`Adding user ${req.query.username} to session ${req.params.sessionName}`);
       const userInfo = await T.get('users/lookup', { screen_name: req.query.username });
       const userId = userInfo.data[0].id_str;
-      console.log(`User ID: ${userId}`);
+      // console.log(`User ID: ${userId}`);
       await db.addParticipantToSession(userId, req.params.sessionName);
   
-      // Prepare the user data to be sent
-      const userData = {
-        id: userInfo.data[0].id_str,
-        name: userInfo.data[0].name,
-        screen_name: userInfo.data[0].screen_name,
-        description: userInfo.data[0].description,
-        profile_image_url: userInfo.data[0].profile_image_url_https.replace('_normal', ''),
-        created_at: userInfo.data[0].created_at,
-        verified: userInfo.data[0].verified,
-        followers_count: userInfo.data[0].followers_count,
-        friends_count: userInfo.data[0].friends_count
-      };
+      // // Prepare the user data to be sent
+      // const userData = {
+      //   id: userInfo.data[0].id_str,
+      //   name: userInfo.data[0].name,
+      //   screen_name: userInfo.data[0].screen_name,
+      //   description: userInfo.data[0].description,
+      //   profile_image_url: userInfo.data[0].profile_image_url_https.replace('_normal', ''),
+      //   created_at: userInfo.data[0].created_at,
+      //   verified: userInfo.data[0].verified,
+      //   followers_count: userInfo.data[0].followers_count,
+      //   friends_count: userInfo.data[0].friends_count
+      // };
   
-      // Emit an event to all connected clients
+      // // Emit an event to all connected clients
       const io = app.get('io');
-      io.emit('participant added', { userInfo: userData });
+      // io.emit('participant added', { userInfo: userData });
+      const newData = await db.addParticipantAndFetchNewData(userId, req.params.sessionName);
+      io.emit('new data', newData);
   
       res.status(200).send(`User ${req.query.username} added to session ${req.params.sessionName}`);
     } catch (err) {
@@ -168,6 +170,6 @@ module.exports = function(app) {
       res.status(500).send('An error occurred while adding the user to the session.');
     }
   });  
-
+  
   return router;
 };
