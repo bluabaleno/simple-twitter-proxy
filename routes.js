@@ -116,7 +116,6 @@ module.exports = function(app) {
       }
 
       await saveCommonUsersToNeo4j(commonData);
-      console.log(`Saved ${commonData.length} common users to Neo4j`);
     } catch (err) {
       console.error(`Error getting friend or follower IDs for user: ${req.params.username}`);
       console.error(err);
