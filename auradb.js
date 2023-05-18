@@ -222,7 +222,7 @@ async function newInitialGraph(sessionName) {
 
   try {
     const result = await session.run(cypherQuery, { sessionName: sessionName });
-    console.log('result.records', result.records);
+    // console.log('result.records', result.records);
 
     result.records.forEach((record) => {
       const participant1Id = record.get('p1').identity.toInt();
