@@ -2,12 +2,12 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-app.use(cors());
+app.use(cors({ origin: true }));
 require('dotenv').config();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
   cors: {
-    origin: "http://192.168.43.235:3001",
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
@@ -24,6 +24,7 @@ io.on('connection', (socket) => {
   console.log('a user connected');
 });
 
-http.listen(3000, '0.0.0.0', () => {
-  console.log('Server running at http://0.0.0.0:3000');
+const PORT = process.env.PORT || 3001; // default to 3001 if process.env.PORT is not set
+http.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running at http://0.0.0.0:${PORT}`);
 });
