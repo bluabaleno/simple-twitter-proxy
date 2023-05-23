@@ -95,29 +95,29 @@ module.exports = function(app) {
       
       console.log('common', common);
 
-      // const commonData = [];
-      // for (let i = 0; i < common.length; i += 100) {
-      //   const ids = common.slice(i, i + 100).join(',');
-      //   try {
-      //     const usersRes = await T.get('users/lookup', { user_id: ids });
-      //     commonData.push(...usersRes.data.map(data => ({
-      //       id: data.id_str,
-      //       name: data.name,
-      //       screen_name: data.screen_name,
-      //       description: data.description,
-      //       profile_image_url: data.profile_image_url_https.replace('_normal', ''),
-      //       created_at: data.created_at,
-      //       verified: data.verified,
-      //       followers_count: data.followers_count,
-      //       friends_count: data.friends_count
-      //     })));
-      //   } catch (err) {
-      //     console.error(`Error getting user data for IDs: ${ids}`);
-      //     console.error(err);
-      //   }
-      // }
+      const commonData = [];
+      for (let i = 0; i < common.length; i += 100) {
+        const ids = common.slice(i, i + 100).join(',');
+        try {
+          const usersRes = await T.get('users/lookup', { user_id: ids });
+          commonData.push(...usersRes.data.map(data => ({
+            id: data.id_str,
+            name: data.name,
+            screen_name: data.screen_name,
+            description: data.description,
+            profile_image_url: data.profile_image_url_https.replace('_normal', ''),
+            created_at: data.created_at,
+            verified: data.verified,
+            followers_count: data.followers_count,
+            friends_count: data.friends_count
+          })));
+        } catch (err) {
+          console.error(`Error getting user data for IDs: ${ids}`);
+          console.error(err);
+        }
+      }
 
-      // await saveCommonUsersToNeo4j(commonData);
+      await saveCommonUsersToNeo4j(commonData);
     } catch (err) {
       console.error(`Error getting friend or follower IDs for user: ${req.params.username}`);
       console.error(err);
