@@ -154,12 +154,25 @@ router.get('/common/:username', async (req, res) => {
       const userInfo = await T.get('users/lookup', { screen_name: req.query.username });
       const userId = userInfo.data[0].id_str;
   
-      const ifUserExists = await db.checkIfUserExistsInAuraDB(userId);
-      if (!ifUserExists) {
-        res.status(200).send(`User ${req.query.username} does not exist in database, fetching and saving data now`);
-        await getCommonData(req.query.username);
-        console.log('Data fetched and saved');
-      }
+      // const ifUserExists = await db.checkIfUserExistsInAuraDB(userId);
+      // if (!ifUserExists) {
+      //   res.status(200).send(`User ${req.query.username} does not exist in database, fetching and saving data now`);
+      //   await getCommonData(req.query.username);
+      //   console.log('Data fetched and saved');
+      // }
+
+      // // Prepare the user data to be updated
+      // const userData = {
+      //   id: userInfo.data[0].id_str,
+      //   name: userInfo.data[0].name,
+      //   screen_name: userInfo.data[0].screen_name,
+      //   description: userInfo.data[0].description,
+      //   profile_image_url: userInfo.data[0].profile_image_url_https.replace('_normal', ''),
+      //   created_at: userInfo.data[0].created_at,
+      //   verified: userInfo.data[0].verified,
+      //   followers_count: userInfo.data[0].followers_count,
+      //   friends_count: userInfo.data[0].friends_count
+      // };
   
       await db.addParticipantToSession(userId, req.params.sessionName);
   
