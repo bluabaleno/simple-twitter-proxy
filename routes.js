@@ -85,13 +85,14 @@ module.exports = function(app) {
 
   router.get('/common/:username', async (req, res) => {
     try {
-      const friendsRes = await T.get('friends/ids', { screen_name: req.params.username, stringify_ids: true });
-      const followersRes = await T.get('followers/ids', { screen_name: req.params.username, stringify_ids: true });
+      const [friendsRes, followersRes] = await Promise.all([
+        T.get('friends/ids', { screen_name: req.params.username, stringify_ids: true }),
+        T.get('followers/ids', { screen_name: req.params.username, stringify_ids: true })
+      ]);      
 
-      const friends = friendsRes.data.ids;
-      const followers = followersRes.data.ids;
-
-      const common = friends.filter(id => followers.includes(id));
+      const friendsSet = new Set(friendsRes.data.ids);
+      const common = followersRes.data.ids.filter(id => friendsSet.has(id));
+      
       console.log('common', common);
 
       // const commonData = [];
