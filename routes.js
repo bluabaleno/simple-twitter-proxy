@@ -6,7 +6,7 @@ module.exports = function(app) {
   const router = express.Router();
   const Twit = require('twit');
   const db = require('./auradb');  // Import your database operations
-  const { saveCommonUsersToNeo4j, addParticipantToSession, addParticipantAndFetchNewData } = require('./auradb');
+  const { saveCommonUsersToNeo4j, addParticipantToSession, addParticipantAndFetchNewData, checkIfUserExistsInAuraDB } = require('./auradb');
 
   const T = new Twit({
     consumer_key:         process.env.TWITTER_CONSUMER_KEY,
@@ -186,7 +186,7 @@ router.get('/common/:username', async (req, res) => {
       const userInfo = await T.get('users/lookup', { screen_name: req.query.username });
       const userId = userInfo.data[0].id_str;
   
-      const ifUserExists = await db.checkIfUserExists(userId);
+      const ifUserExists = await db.checkIfUserExistsInAuraDB(userId);
       if (!ifUserExists) {
         res.status(200).send(`User ${req.query.username} does not exist in database, fetching and saving data now`);
         await getCommonData(req.query.username);
