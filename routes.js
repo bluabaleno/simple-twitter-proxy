@@ -186,11 +186,11 @@ router.get('/common/:username', async (req, res) => {
       const userInfo = await T.get('users/lookup', { screen_name: req.query.username });
       const userId = userInfo.data[0].id_str;
   
-      const ifUserExists = await db.checkIfUserExistsInAuraDB(userId);
-      if (!ifUserExists) {
-        res.status(200).send(`User ${req.query.username} does not exist in database, fetching and saving data now`);
-        await getCommonData(req.query.username);
-      }
+      // const ifUserExists = await db.checkIfUserExistsInAuraDB(userId);
+      // if (!ifUserExists) {
+      //   res.status(200).send(`User ${req.query.username} does not exist in database, fetching and saving data now`);
+      //   await getCommonData(req.query.username);
+      // }
   
       await db.addParticipantToSession(userId, req.params.sessionName);
   
