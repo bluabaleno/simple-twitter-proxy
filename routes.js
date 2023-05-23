@@ -92,30 +92,31 @@ module.exports = function(app) {
       const followers = followersRes.data.ids;
 
       const common = friends.filter(id => followers.includes(id));
+      console.log('common', common);
 
-      const commonData = [];
-      for (let i = 0; i < common.length; i += 100) {
-        const ids = common.slice(i, i + 100).join(',');
-        try {
-          const usersRes = await T.get('users/lookup', { user_id: ids });
-          commonData.push(...usersRes.data.map(data => ({
-            id: data.id_str,
-            name: data.name,
-            screen_name: data.screen_name,
-            description: data.description,
-            profile_image_url: data.profile_image_url_https.replace('_normal', ''),
-            created_at: data.created_at,
-            verified: data.verified,
-            followers_count: data.followers_count,
-            friends_count: data.friends_count
-          })));
-        } catch (err) {
-          console.error(`Error getting user data for IDs: ${ids}`);
-          console.error(err);
-        }
-      }
+      // const commonData = [];
+      // for (let i = 0; i < common.length; i += 100) {
+      //   const ids = common.slice(i, i + 100).join(',');
+      //   try {
+      //     const usersRes = await T.get('users/lookup', { user_id: ids });
+      //     commonData.push(...usersRes.data.map(data => ({
+      //       id: data.id_str,
+      //       name: data.name,
+      //       screen_name: data.screen_name,
+      //       description: data.description,
+      //       profile_image_url: data.profile_image_url_https.replace('_normal', ''),
+      //       created_at: data.created_at,
+      //       verified: data.verified,
+      //       followers_count: data.followers_count,
+      //       friends_count: data.friends_count
+      //     })));
+      //   } catch (err) {
+      //     console.error(`Error getting user data for IDs: ${ids}`);
+      //     console.error(err);
+      //   }
+      // }
 
-      await saveCommonUsersToNeo4j(commonData);
+      // await saveCommonUsersToNeo4j(commonData);
     } catch (err) {
       console.error(`Error getting friend or follower IDs for user: ${req.params.username}`);
       console.error(err);
@@ -139,6 +140,8 @@ module.exports = function(app) {
   router.get('/session/:sessionName/addUser', async (req, res) => {
     try {
       console.log(`Adding user ${req.query.username} to session ${req.params.sessionName}`);
+      //check if req.query.username is an ethereum address or a twitter username
+      //if ethereum address, get NFT contract data and add to neo4j
       const userInfo = await T.get('users/lookup', { screen_name: req.query.username });
       const userId = userInfo.data[0].id_str;
       // console.log(`User ID: ${userId}`);
