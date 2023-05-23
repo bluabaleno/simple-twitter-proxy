@@ -118,6 +118,7 @@ module.exports = function(app) {
       }
 
       await saveCommonUsersToNeo4j(commonData);
+      res.status(200).send('Data updated successfully');
     } catch (err) {
       console.error(`Error getting friend or follower IDs for user: ${req.params.username}`);
       console.error(err);
