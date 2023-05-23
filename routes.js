@@ -124,40 +124,8 @@ module.exports = function(app) {
   }
 
 router.get('/common/:username', async (req, res) => {
-  try {
-    const [friends, followers] = await Promise.all([
-      getFriends(req.params.username),
-      getFollowers(req.params.username)
-    ]);
-
-    const friendsSet = new Set(friends);
-    const common = followers.filter(id => friendsSet.has(id));
-
-    console.log('common', common.length);
-
-      const commonData = [];
-      for (let i = 0; i < common.length; i += 100) {
-        const ids = common.slice(i, i + 100).join(',');
-        try {
-          const usersRes = await T.get('users/lookup', { user_id: ids });
-          commonData.push(...usersRes.data.map(data => ({
-            id: data.id_str,
-            name: data.name,
-            screen_name: data.screen_name,
-            description: data.description,
-            profile_image_url: data.profile_image_url_https.replace('_normal', ''),
-            created_at: data.created_at,
-            verified: data.verified,
-            followers_count: data.followers_count,
-            friends_count: data.friends_count
-          })));
-        } catch (err) {
-          console.error(`Error getting user data for IDs: ${ids}`);
-          console.error(err);
-        }
-      }
-      //only works with users with less than 15k combine following and friends
-      await saveCommonUsersToNeo4j(commonData);
+    try {
+      await getCommonData(req.params.username);
       res.status(200).send('Data fetched successfully');
     } catch (err) {
       console.error(`Error getting friend or follower IDs for user: ${req.params.username}`);
