@@ -38,62 +38,65 @@ module.exports = function(app) {
     });
   });
 
-  router.get('/friends/:username', (req, res) => {
-    let friends = [];
-
-    function getFriends(cursor) {
-      T.get('friends/ids', { screen_name: req.params.username, cursor: cursor }, function(err, data, response) {
-        if (err) {
-          res.status(500).send(err);
-        } else {
-          friends = friends.concat(data.ids);
-
-          if (data.next_cursor) {
-            getFriends(data.next_cursor);
+  function getFriends(username) {
+    return new Promise((resolve, reject) => {
+      let friends = [];
+  
+      function fetch(cursor) {
+        T.get('friends/ids', { screen_name: username, cursor: cursor }, function(err, data, response) {
+          if (err) {
+            reject(err);
           } else {
-            res.send(friends);
+            friends = friends.concat(data.ids);
+  
+            if (data.next_cursor) {
+              fetch(data.next_cursor);
+            } else {
+              resolve(friends);
+            }
           }
-        }
-      });
-    }
-
-    getFriends(-1);  // Start with the first page
-  });
-
-
-  router.get('/followers/:username', (req, res) => {
-    let followers = [];
-
-    function getFollowers(cursor) {
-      T.get('followers/ids', { screen_name: req.params.username, cursor: cursor }, function(err, data, response) {
-        if (err) {
-          res.status(500).send(err);
-        } else {
-          followers = followers.concat(data.ids);
-
-          if (data.next_cursor) {
-            getFollowers(data.next_cursor);
+        });
+      }
+  
+      fetch(-1);  // Start with the first page
+    });
+  }
+  
+  function getFollowers(username) {
+    return new Promise((resolve, reject) => {
+      let followers = [];
+  
+      function fetch(cursor) {
+        T.get('followers/ids', { screen_name: username, cursor: cursor }, function(err, data, response) {
+          if (err) {
+            reject(err);
           } else {
-            res.send(followers);
+            followers = followers.concat(data.ids);
+  
+            if (data.next_cursor) {
+              fetch(data.next_cursor);
+            } else {
+              resolve(followers);
+            }
           }
-        }
-      });
-    }
+        });
+      }
+  
+      fetch(-1);  // Start with the first page
+    });
+  }
 
-    getFollowers(-1);  // Start with the first page
-  });
+router.get('/common/:username', async (req, res) => {
+  try {
+    const [friends, followers] = await Promise.all([
+      getFriends(req.params.username),
+      getFollowers(req.params.username)
+    ]);
 
-  router.get('/common/:username', async (req, res) => {
-    try {
-      const [friendsRes, followersRes] = await Promise.all([
-        T.get('friends/ids', { screen_name: req.params.username, stringify_ids: true }),
-        T.get('followers/ids', { screen_name: req.params.username, stringify_ids: true })
-      ]);      
+    const friendsSet = new Set(friends);
+    const common = followers.filter(id => friendsSet.has(id));
 
-      const friendsSet = new Set(friendsRes.data.ids);
-      const common = followersRes.data.ids.filter(id => friendsSet.has(id));
-      
-      console.log('common', common);
+    console.log('common', common.length);
 
       const commonData = [];
       for (let i = 0; i < common.length; i += 100) {
@@ -118,7 +121,7 @@ module.exports = function(app) {
       }
 
       await saveCommonUsersToNeo4j(commonData);
-      res.status(200).send('Data updated successfully');
+      res.status(200).send('Data fetched successfully');
     } catch (err) {
       console.error(`Error getting friend or follower IDs for user: ${req.params.username}`);
       console.error(err);
