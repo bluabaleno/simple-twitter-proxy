@@ -7,6 +7,8 @@ module.exports = function(app) {
   const Twit = require('twit');
   const db = require('./auradb');  // Import your database operations
   const { saveCommonUsersToNeo4j, addParticipantToSession, addParticipantAndFetchNewData, checkIfUserExistsInAuraDB, addFollowsRelationships } = require('./auradb');
+  const axios = require('axios'); // Import axios if not done yet
+  const graphql_endpoint = "https://master.graphql.knn3.xyz/graphql";
 
   const T = new Twit({
     consumer_key:         process.env.TWITTER_CONSUMER_KEY,
@@ -16,6 +18,56 @@ module.exports = function(app) {
     bearer_token:         process.env.TWITTER_BEARER_TOKEN,
     timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
   });
+
+  async function query_data(address) {
+    const query = `
+      query {
+        addrs(where:{address:"${address}"}, options:{limit:30}) {
+          address
+          holdNfts(options:{limit:30}) {
+            name
+            contract
+            symbol
+          }
+          holdTokens(options:{limit:30}) {
+              name
+              symbol
+          }
+          attendEvents(options:{limit:30}) {
+            name
+            id
+          }
+          holdPolygonNfts(options:{limit:30}){
+            name
+            symbol
+            nftCount
+            contract
+          }
+          holdPolygonTokens(options:{limit:30}){
+            name
+            symbol
+            tokenCount
+            contract
+          }
+        }
+      }
+    `;
+  
+    try {
+      const response = await axios.post(
+        graphql_endpoint, 
+        { query: query },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      if (response.status != 200) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+      return response.data.data.addrs;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 
   router.get('/userInfo/:username', (req, res) => {
     T.get('users/show', { screen_name: req.params.username }, function(err, data, response) {
@@ -149,13 +201,17 @@ router.get('/common/:username', async (req, res) => {
   });
 
   router.post('/session/:sessionName/addAddress', async (req, res) => {
-    console.log('route reached', req.query)
+    console.log('route reached', req.query);
     try {
       console.log(`Adding user ${req.query.address} to session ${req.params.sessionName}`);
-      res.status(200).send(`User ${req.query.address} added to session ${req.params.sessionName}`); // add response
+      
+      const data = await query_data(req.query.address);
+      console.log(data); // Logs the data obtained from the GraphQL endpoint
+  
+      res.status(200).send(`User ${req.query.address} added to session ${req.params.sessionName}`); 
     } catch (err) {
       console.error(`Error adding user ${req.query.address} to session ${req.params.sessionName}`);
-      res.status(500).send(`Error adding user ${req.query.address} to session ${req.params.sessionName}`); // add error response
+      res.status(500).send(`Error adding user ${req.query.address} to session ${req.params.sessionName}`);
     }
   });
   
