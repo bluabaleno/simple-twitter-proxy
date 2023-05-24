@@ -86,6 +86,7 @@ module.exports = function(app) {
     });
   }
 
+
   async function getCommonData(username) {
     const [friends, followers] = await Promise.all([
       getFriends(username),
@@ -169,7 +170,10 @@ router.get('/common/:username', async (req, res) => {
         friends_count: userInfo.data[0].friends_count
       };
         await db.addUserToAuraDB(userData);
-        await getCommonData(req.query.username);
+        for (const friend of commonFriends) {
+          await db.addFollowsRelationship(userData.id, friend.id);
+        }        
+        const commonFriends = await getCommonData(req.query.username);
         console.log('Data fetched and saved');
       }
   
