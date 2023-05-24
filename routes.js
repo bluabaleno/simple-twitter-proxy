@@ -6,7 +6,7 @@ module.exports = function(app) {
   const router = express.Router();
   const Twit = require('twit');
   const db = require('./auradb');  // Import your database operations
-  const { saveCommonUsersToNeo4j, addParticipantToSession, addParticipantAndFetchNewData, checkIfUserExistsInAuraDB } = require('./auradb');
+  const { saveCommonUsersToNeo4j, addParticipantToSession, addParticipantAndFetchNewData, checkIfUserExistsInAuraDB, addFollowsRelationships } = require('./auradb');
 
   const T = new Twit({
     consumer_key:         process.env.TWITTER_CONSUMER_KEY,
@@ -172,7 +172,7 @@ router.get('/common/:username', async (req, res) => {
       await db.addUserToAuraDB(userData);
       const commonFriends = await getCommonData(req.query.username);
       const friendIds = commonFriends.map(friend => friend.id);
-      await db.addFollowsRelationships(userData.id, friendIds);
+      await addFollowsRelationships(userData.id, friendIds);
         
         console.log('Data fetched and saved');
       }
