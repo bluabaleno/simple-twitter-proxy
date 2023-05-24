@@ -148,6 +148,15 @@ router.get('/common/:username', async (req, res) => {
     }
   });
 
+  router.get('/session/:sessionName/addUser', async (req, res) => {
+    try {
+      console.log(`Adding user ${req.query.address} to session ${req.params.sessionName}`);
+    } catch (err) {
+      console.error(`Error adding user ${req.query.address} to session ${req.params.sessionName}`);
+    }
+  });
+
+
 router.get('/session/:sessionName/addUser', async (req, res) => {
   try {
     console.log(`Adding user ${req.query.username} to session ${req.params.sessionName}`);
