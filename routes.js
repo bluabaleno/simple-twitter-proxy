@@ -172,7 +172,7 @@ router.get('/session/:sessionName/addUser', async (req, res) => {
       
       // Emit the event to the client side to update the user interface
       const io = app.get('io');
-      io.emit('user added', userData);
+      io.emit('user data', userData);
       
       const commonFriends = await getCommonData(req.query.username);
       const friendIds = commonFriends.map(friend => friend.id);
