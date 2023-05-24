@@ -156,7 +156,6 @@ router.get('/common/:username', async (req, res) => {
   
       const ifUserExists = await db.checkIfUserExistsInAuraDB(userId);
       if (!ifUserExists) {
-        res.status(200).send(`User ${req.query.username} does not exist in database, fetching and saving data now`);
         await getCommonData(req.query.username);
         console.log('Data fetched and saved');
       }
