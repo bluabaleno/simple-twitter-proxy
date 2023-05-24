@@ -154,6 +154,7 @@ router.get('/session/:sessionName/addUser', async (req, res) => {
 
     const userInfo = await T.get('users/lookup', { screen_name: req.query.username });
     const userId = userInfo.data[0].id_str;
+    const io = app.get('io');
 
     const ifUserExists = await db.checkIfUserExistsInAuraDB(userId);
     if (!ifUserExists) {
@@ -171,7 +172,6 @@ router.get('/session/:sessionName/addUser', async (req, res) => {
       await db.addUserToAuraDB(userData);
       
       // Emit the event to the client side to update the user interface
-      const io = app.get('io');
       io.emit('user data', userData);
       
       const commonFriends = await getCommonData(req.query.username);
@@ -183,7 +183,7 @@ router.get('/session/:sessionName/addUser', async (req, res) => {
 
     await db.addParticipantToSession(userId, req.params.sessionName);
     const newData = await db.addParticipantAndFetchNewData(userId, req.params.sessionName);
-
+    io.emit('new data', newData);
     res.status(200).send(`User ${req.query.username} added to session ${req.params.sessionName}`);
   } catch (err) {
     console.error(err);
