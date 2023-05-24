@@ -149,7 +149,7 @@ router.get('/common/:username', async (req, res) => {
   });
 
   router.post('/session/:sessionName/addAddress', async (req, res) => {
-    console.log('route reached', req)
+    console.log('route reached', req.query)
     try {
       console.log(`Adding user ${req.query.address} to session ${req.params.sessionName}`);
     } catch (err) {
