@@ -173,6 +173,32 @@ const addUserToAuraDB = async (userInfo) => {
 };
 
 
+const addFollowsRelationships = async (userId, friendIds) => {
+  const session = driver.session();
+
+  try {
+    await session.writeTransaction(async (tx) => {
+      await tx.run(
+        `
+          MATCH (user:Person {id: $userId})
+          UNWIND $friendIds AS friendId
+          MATCH (friend:Person {id: friendId})
+          MERGE (user)-[r1:FOLLOWS]->(friend)
+          MERGE (friend)-[r2:FOLLOWS]->(user)
+        `,
+        { userId, friendIds }
+      );
+    });
+  } catch (error) {
+    console.error('An error occurred while adding FOLLOWS relationships:', error);
+  } finally {
+    await session.close();
+  }
+};
+
+
+
+
 async function getSessionEndDate(sessionName) {
   if (!sessionName || typeof sessionName !== 'string') {
     throw new Error('Invalid session name');

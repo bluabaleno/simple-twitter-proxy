@@ -170,11 +170,9 @@ router.get('/common/:username', async (req, res) => {
         friends_count: userInfo.data[0].friends_count
       };
         await db.addUserToAuraDB(userData);
-        for (const friend of commonFriends) {
-          await db.addFollowsRelationship(userData.id, friend.id);
-        }        
         const commonFriends = await getCommonData(req.query.username);
-        console.log('Data fetched and saved');
+        const friendIds = commonFriends.map(friend => friend.id);
+        await addFollowsRelationships(userData.id, friendIds);
       }
   
       await db.addParticipantToSession(userId, req.params.sessionName);
