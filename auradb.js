@@ -116,6 +116,63 @@ const saveCommonUsersToNeo4j = async (commonUsersInfo) => {
   }
 };
 
+const addUserToAuraDB = async (userInfo) => {
+  const session = driver.session();
+  const lastUpdated = Math.floor(Date.now() / 1000); // Get current UNIX timestamp
+  const lastUpdatedLocal = new Date().toLocaleString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+
+  try {
+    await session.writeTransaction(async (tx) => {
+      const userParam = {
+        id: String(userInfo.id),
+        name: userInfo.name,
+        screen_name: userInfo.screen_name.toLowerCase(),
+        description: userInfo.description,
+        profile_image_url: userInfo.profile_image_url,
+        created_at: userInfo.created_at,
+        verified: userInfo.verified,
+        followers_count: userInfo.followers_count,
+        friends_count: userInfo.friends_count,
+        lastUpdated: lastUpdated,
+        lastUpdatedLocal: lastUpdatedLocal,
+      };
+
+      await tx.run(
+        `
+          MERGE (user:Person {id: $id})
+          SET user += {
+            name: $name,
+            screen_name: $screen_name,
+            description: $description,
+            profile_image_url: $profile_image_url,
+            created_at: $created_at,
+            verified: $verified,
+            followers_count: $followers_count,
+            friends_count: $friends_count,
+            lastUpdated: $lastUpdated,
+            lastUpdatedLocal: $lastUpdatedLocal
+          }
+        `,
+        userParam
+      );
+    });
+
+  } catch (error) {
+    console.error('An error occurred while saving data to AuraDB:', error);
+  } finally {
+    await session.close();
+  }
+};
+
+
 async function getSessionEndDate(sessionName) {
   if (!sessionName || typeof sessionName !== 'string') {
     throw new Error('Invalid session name');
@@ -274,4 +331,4 @@ async function newInitialGraph(sessionName) {
   return fetchedData;
 }
 
-module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData };
+module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB };

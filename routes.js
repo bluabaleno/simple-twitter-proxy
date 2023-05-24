@@ -156,22 +156,22 @@ router.get('/common/:username', async (req, res) => {
   
       const ifUserExists = await db.checkIfUserExistsInAuraDB(userId);
       if (!ifUserExists) {
+      // // Prepare the user data to be updated
+      const userData = {
+        id: userInfo.data[0].id_str,
+        name: userInfo.data[0].name,
+        screen_name: userInfo.data[0].screen_name,
+        description: userInfo.data[0].description,
+        profile_image_url: userInfo.data[0].profile_image_url_https.replace('_normal', ''),
+        created_at: userInfo.data[0].created_at,
+        verified: userInfo.data[0].verified,
+        followers_count: userInfo.data[0].followers_count,
+        friends_count: userInfo.data[0].friends_count
+      };
+        await db.addUserToAuraDB(userData);
         await getCommonData(req.query.username);
         console.log('Data fetched and saved');
       }
-
-      // // Prepare the user data to be updated
-      // const userData = {
-      //   id: userInfo.data[0].id_str,
-      //   name: userInfo.data[0].name,
-      //   screen_name: userInfo.data[0].screen_name,
-      //   description: userInfo.data[0].description,
-      //   profile_image_url: userInfo.data[0].profile_image_url_https.replace('_normal', ''),
-      //   created_at: userInfo.data[0].created_at,
-      //   verified: userInfo.data[0].verified,
-      //   followers_count: userInfo.data[0].followers_count,
-      //   friends_count: userInfo.data[0].friends_count
-      // };
   
       await db.addParticipantToSession(userId, req.params.sessionName);
   
