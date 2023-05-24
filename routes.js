@@ -169,10 +169,12 @@ router.get('/common/:username', async (req, res) => {
         followers_count: userInfo.data[0].followers_count,
         friends_count: userInfo.data[0].friends_count
       };
-        await db.addUserToAuraDB(userData);
-        const commonFriends = await getCommonData(req.query.username);
-        const friendIds = commonFriends.map(friend => friend.id);
-        await addFollowsRelationships(userData.id, friendIds);
+      await db.addUserToAuraDB(userData);
+      const commonFriends = await getCommonData(req.query.username);
+      const friendIds = commonFriends.map(friend => friend.id);
+      await db.addFollowsRelationships(userData.id, friendIds);
+        
+        console.log('Data fetched and saved');
       }
   
       await db.addParticipantToSession(userId, req.params.sessionName);
