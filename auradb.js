@@ -197,8 +197,6 @@ const addFollowsRelationships = async (userId, friendIds) => {
 };
 
 
-
-
 async function getSessionEndDate(sessionName) {
   if (!sessionName || typeof sessionName !== 'string') {
     throw new Error('Invalid session name');
@@ -357,4 +355,4 @@ async function newInitialGraph(sessionName) {
   return fetchedData;
 }
 
-module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB };
+module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB, addFollowsRelationships };
