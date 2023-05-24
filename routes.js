@@ -149,17 +149,11 @@ router.get('/common/:username', async (req, res) => {
   });
 
   router.post('/session/:sessionName/addAddress', async (req, res) => {
+    console.log('route reached')
     try {
-      console.log(`Adding user ${req.body.address} to session ${req.params.sessionName}`); // access address from the body of the request
-  
-      // Here you can add your code for processing and saving the address to the database
-  
-      // Send a response back to the client
-      res.status(200).json({ message: `User ${req.body.address} added to session ${req.params.sessionName}` });
-  
+      console.log(`Adding user ${req.query.address} to session ${req.params.sessionName}`);
     } catch (err) {
-      console.error(`Error adding user ${req.body.address} to session ${req.params.sessionName}`);
-      res.status(500).send('An error occurred while processing address data.');
+      console.error(`Error adding user ${req.query.address} to session ${req.params.sessionName}`);
     }
   });
 
