@@ -149,16 +149,13 @@ router.get('/common/:username', async (req, res) => {
   });
 
   router.post('/session/:sessionName/addAddress', async (req, res) => {
-    console.log('route reached');
+    console.log('route reached')
     try {
-      console.log(`Adding user ${req.body.address} to session ${req.params.sessionName}`);
-      res.status(200).send(`User ${req.body.address} added to session ${req.params.sessionName} successfully.`);
+      console.log(`Adding user ${req.query.address} to session ${req.params.sessionName}`);
     } catch (err) {
-      console.error(`Error adding user ${req.body.address} to session ${req.params.sessionName}`);
-      res.status(500).send(`Error adding user ${req.body.address} to session ${req.params.sessionName}`);
+      console.error(`Error adding user ${req.query.address} to session ${req.params.sessionName}`);
     }
   });
-  
 
 
 router.get('/session/:sessionName/addUser', async (req, res) => {
