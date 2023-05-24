@@ -206,8 +206,8 @@ router.get('/common/:username', async (req, res) => {
       console.log(`Adding user ${req.query.address} to session ${req.params.sessionName}`);
       
       const data = await query_data(req.query.address);
-      console.log(data); // Logs the data obtained from the GraphQL endpoint
-  
+      console.log(JSON.stringify(data, null, 2));
+        
       res.status(200).send(`User ${req.query.address} added to session ${req.params.sessionName}`); 
     } catch (err) {
       console.error(`Error adding user ${req.query.address} to session ${req.params.sessionName}`);
