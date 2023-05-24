@@ -148,16 +148,15 @@ router.get('/common/:username', async (req, res) => {
     }
   });
 
-  router.get('/session/:sessionName/addUser', async (req, res) => {
-    try {
-      console.log(`Adding user ${req.query.username} to session ${req.params.sessionName}`);
-  
-      const userInfo = await T.get('users/lookup', { screen_name: req.query.username });
-      const userId = userInfo.data[0].id_str;
-  
-      const ifUserExists = await db.checkIfUserExistsInAuraDB(userId);
-      if (!ifUserExists) {
-      // // Prepare the user data to be updated
+router.get('/session/:sessionName/addUser', async (req, res) => {
+  try {
+    console.log(`Adding user ${req.query.username} to session ${req.params.sessionName}`);
+
+    const userInfo = await T.get('users/lookup', { screen_name: req.query.username });
+    const userId = userInfo.data[0].id_str;
+
+    const ifUserExists = await db.checkIfUserExistsInAuraDB(userId);
+    if (!ifUserExists) {
       const userData = {
         id: userInfo.data[0].id_str,
         name: userInfo.data[0].name,
@@ -170,25 +169,28 @@ router.get('/common/:username', async (req, res) => {
         friends_count: userInfo.data[0].friends_count
       };
       await db.addUserToAuraDB(userData);
+      
+      // Emit the event to the client side to update the user interface
+      const io = app.get('io');
+      io.emit('user added', userData);
+      
       const commonFriends = await getCommonData(req.query.username);
       const friendIds = commonFriends.map(friend => friend.id);
       await db.addFollowsRelationships(userData.id, friendIds);
-        
-        console.log('Data fetched and saved');
-      }
-  
-      await db.addParticipantToSession(userId, req.params.sessionName);
-  
-      const io = app.get('io');
-      const newData = await db.addParticipantAndFetchNewData(userId, req.params.sessionName);
-      io.emit('new data', newData);
-  
-      res.status(200).send(`User ${req.query.username} added to session ${req.params.sessionName}`);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send('An error occurred while adding the user to the session.');
+      
+      console.log('Data fetched and saved');
     }
-  });  
-  
-  return router;
+
+    await db.addParticipantToSession(userId, req.params.sessionName);
+    const newData = await db.addParticipantAndFetchNewData(userId, req.params.sessionName);
+
+    res.status(200).send(`User ${req.query.username} added to session ${req.params.sessionName}`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('An error occurred while adding the user to the session.');
+  }
+});
+
+return router;
+
 };
