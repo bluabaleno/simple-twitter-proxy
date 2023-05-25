@@ -358,15 +358,15 @@ async function newInitialGraph(sessionName) {
 async function addEntitiesToAddress(data) {
   const session = driver.session();
   const transaction = session.beginTransaction();
-  const address = data.addrs[0].address;
-  const ens = data.addrs[0].ens;
+  const address = data[0].address;
+  const ens = data[0].ens;
   console.log('addEntitiesToAddress called with address', address, 'and ens', ens);
   
   try {
     const entities = [];
 
     // Transform Tokens
-    data.addrs[0].holdTokens?.forEach(token => {
+    data[0].holdTokens?.forEach(token => {
       entities.push({
         type: 'Token',
         name: token.name,
@@ -375,7 +375,7 @@ async function addEntitiesToAddress(data) {
     });
 
     // Transform NFTs
-    data.addrs[0].holdNfts?.forEach(nft => {
+    data[0].holdNfts?.forEach(nft => {
       entities.push({
         type: 'NFT',
         name: nft.name,
@@ -384,7 +384,7 @@ async function addEntitiesToAddress(data) {
     });
 
     // Transform Events
-    data.addrs[0].attendEvents?.forEach(events => {
+    data[0].attendEvents?.forEach(events => {
       entities.push({
         type: 'Events',
         name: events.name,
@@ -393,7 +393,7 @@ async function addEntitiesToAddress(data) {
     });
 
     // Transform PolygonNFTs
-    data.addrs[0].holdPolygonNfts?.forEach(polygonNft => {
+    data[0].holdPolygonNfts?.forEach(polygonNft => {
       entities.push({
         type: 'PolygonNFT',
         name: polygonNft.name,
@@ -404,7 +404,7 @@ async function addEntitiesToAddress(data) {
     });
 
     // Transform PolygonTokens
-    data.addrs[0].holdPolygonTokens?.forEach(polygonToken => {
+    data[0].holdPolygonTokens?.forEach(polygonToken => {
       entities.push({
         type: 'PolygonToken',
         name: polygonToken.name,
