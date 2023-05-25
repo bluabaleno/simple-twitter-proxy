@@ -359,7 +359,7 @@ async function addEntitiesToAddress(data) {
   const session = driver.session();
   const transaction = session.beginTransaction();
   const address = data[0].address;
-  const ens = data[0].ens[0]; // Assuming `ens` is an array in the first `addrs` object
+  const ens = data[0].ens;
   console.log('addEntitiesToAddress called with address', address, 'and ens', ens);
   
   try {
@@ -409,7 +409,7 @@ async function addEntitiesToAddress(data) {
         type: 'PolygonToken',
         name: polygonToken.name,
         symbol: polygonToken.symbol,
-        // tokenCount: polygonToken.tokenCount,
+        tokenCount: polygonToken.tokenCount,
         contract: polygonToken.contract
       });
     });
@@ -431,7 +431,7 @@ async function addEntitiesToAddress(data) {
           break;
         case 'PolygonNFT':
         case 'PolygonToken':
-          mergeQuery = `MERGE (e:${entity.type} {contract: $contract}) ON CREATE SET e.name = $name, e.symbol = $symbol`;
+          mergeQuery = `MERGE (e:${entity.type} {contract: $contract}) ON CREATE SET e.name = $name, e.symbol = $symbol, e.nftCount = $nftCount, e.tokenCount = $tokenCount`;
           relationship = 'HOLDS_ON_POLYGON';
           break;
       }      
