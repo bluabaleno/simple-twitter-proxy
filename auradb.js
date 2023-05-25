@@ -355,43 +355,95 @@ async function newInitialGraph(sessionName) {
   return fetchedData;
 }
 
-async function addEntitiesToAddress(address, entities) {
+async function addEntitiesToAddress(data) {
   const session = driver.session();
   const transaction = session.beginTransaction();
-
+  const address = data.addrs[0].address;
+  const ens = data.addrs[0].ens;
+  
   try {
-    // Assuming your entities is an array of entity data
+    const entities = [];
+
+    // Transform Tokens
+    data.holdTokens?.forEach(token => {
+      entities.push({
+        type: 'Token',
+        name: token.name,
+        symbol: token.symbol
+      });
+    });
+
+    // Transform NFTs
+    data.holdNfts?.forEach(nft => {
+      entities.push({
+        type: 'NFT',
+        name: nft.name,
+        symbol: nft.symbol
+      });
+    });
+
+    // Transform Events
+    data.attendEvents?.forEach(events => {
+      entities.push({
+        type: 'Events',
+        name: events.name,
+        id: events.id,
+      });
+    });
+
+    // Transform PolygonNFTs
+    data.holdPolygonNfts?.forEach(polygonNft => {
+      entities.push({
+        type: 'PolygonNFT',
+        name: polygonNft.name,
+        symbol: polygonNft.symbol,
+        nftCount: polygonNft.nftCount,
+        contract: polygonNft.contract
+      });
+    });
+
+    // Transform PolygonTokens
+    data.holdPolygonTokens?.forEach(polygonToken => {
+      entities.push({
+        type: 'PolygonToken',
+        name: polygonToken.name,
+        symbol: polygonToken.symbol,
+        tokenCount: polygonToken.tokenCount,
+        contract: polygonToken.contract
+      });
+    });
+
+    // Process each entity
     for (const entity of entities) {
       let mergeQuery = "";
       let relationship = "";
 
       switch(entity.type) {
         case 'Token':
+        case 'NFT':
           mergeQuery = `MERGE (e:${entity.type} {symbol: $symbol}) ON CREATE SET e.name = $name`;
           relationship = 'HOLDS';
           break;
-        case 'Event':
+        case 'Events':
           mergeQuery = `MERGE (e:${entity.type} {id: $id}) ON CREATE SET e.name = $name`;
           relationship = 'ATTENDED';
           break;
         case 'PolygonNFT':
-          mergeQuery = `MERGE (e:${entity.type} {contract: $contract}) ON CREATE SET e.name = $name, e.symbol = $symbol, e.nftCount = $nftCount`;
-          relationship = 'HOLDS_ON_POLYGON';
-          break;
         case 'PolygonToken':
-          mergeQuery = `MERGE (e:${entity.type} {contract: $contract}) ON CREATE SET e.name = $name, e.symbol = $symbol, e.tokenCount = $tokenCount`;
+          mergeQuery = `MERGE (e:${entity.type} {contract: $contract}) ON CREATE SET e.name = $name, e.symbol = $symbol, e.nftCount = $nftCount, e.tokenCount = $tokenCount`;
           relationship = 'HOLDS_ON_POLYGON';
           break;
-      }
+      }      
 
       await transaction.run(
         `
           ${mergeQuery}
           WITH e
-          MATCH (n:Address {address: $address})  
+          MERGE (n:Address {address: $address})
+          ON CREATE SET n.ens = $ens
           MERGE (n)-[:${relationship}]->(e)
         `,
-        { ...entity, address: address }
+        { ...entity, address: address, ens: data.ens }
       );
     }
 
@@ -409,5 +461,6 @@ async function addEntitiesToAddress(address, entities) {
     session.close();
   }
 }
+
 
 module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB, addFollowsRelationships, addEntitiesToAddress };
