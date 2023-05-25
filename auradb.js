@@ -355,4 +355,59 @@ async function newInitialGraph(sessionName) {
   return fetchedData;
 }
 
-module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB, addFollowsRelationships };
+async function addEntitiesToAddress(address, entities) {
+  const session = driver.session();
+  const transaction = session.beginTransaction();
+
+  try {
+    // Assuming your entities is an array of entity data
+    for (const entity of entities) {
+      let mergeQuery = "";
+      let relationship = "";
+
+      switch(entity.type) {
+        case 'Token':
+          mergeQuery = `MERGE (e:${entity.type} {symbol: $symbol}) ON CREATE SET e.name = $name`;
+          relationship = 'HOLDS';
+          break;
+        case 'Event':
+          mergeQuery = `MERGE (e:${entity.type} {id: $id}) ON CREATE SET e.name = $name`;
+          relationship = 'ATTENDED';
+          break;
+        case 'PolygonNFT':
+          mergeQuery = `MERGE (e:${entity.type} {contract: $contract}) ON CREATE SET e.name = $name, e.symbol = $symbol, e.nftCount = $nftCount`;
+          relationship = 'HOLDS_ON_POLYGON';
+          break;
+        case 'PolygonToken':
+          mergeQuery = `MERGE (e:${entity.type} {contract: $contract}) ON CREATE SET e.name = $name, e.symbol = $symbol, e.tokenCount = $tokenCount`;
+          relationship = 'HOLDS_ON_POLYGON';
+          break;
+      }
+
+      await transaction.run(
+        `
+          ${mergeQuery}
+          WITH e
+          MATCH (n:Address {address: $address})  
+          MERGE (n)-[:${relationship}]->(e)
+        `,
+        { ...entity, address: address }
+      );
+    }
+
+    // Commit the transaction
+    await transaction.commit();
+
+  } catch (err) {
+    console.error(`Error adding entities to address ${address}: `, err);
+
+    // In case of error, discard the transaction
+    await transaction.rollback();
+    throw err;
+
+  } finally {
+    session.close();
+  }
+}
+
+module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB, addFollowsRelationships, addEntitiesToAddress };
