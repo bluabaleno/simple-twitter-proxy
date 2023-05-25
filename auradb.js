@@ -431,7 +431,7 @@ async function addEntitiesToAddress(data) {
           break;
         case 'PolygonNFT':
         case 'PolygonToken':
-          mergeQuery = `MERGE (e:${entity.type} {contract: $contract}) ON CREATE SET e.name = $name, e.symbol = $symbol, e.nftCount = $nftCount, e.tokenCount = $tokenCount`;
+          mergeQuery = `MERGE (e:${entity.type} {contract: $contract}) ON CREATE SET e.name = $name, e.symbol = $symbol, e.nftCount = $nftCount`;
           relationship = 'HOLDS_ON_POLYGON';
           break;
       }      
