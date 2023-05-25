@@ -21,37 +21,38 @@ module.exports = function(app) {
 
   async function query_data(address) {
     const query = `
-      query {
-        addrs(where:{address:"${address}"}, options:{limit:30}) {
+    {
+      addrs(where:{address:"${address}"}, options:{limit:30}) {
           address
+          ens
           holdNfts(options:{limit:30}) {
-            name
-            contract
-            symbol
+              name
+              contract
+              symbol
           }
           holdTokens(options:{limit:30}) {
               name
               symbol
           }
           attendEvents(options:{limit:30}) {
-            name
-            id
+              name
+              id
           }
           holdPolygonNfts(options:{limit:30}){
-            name
-            symbol
-            nftCount
-            contract
+              name
+              symbol
+              nftCount
+              contract
           }
           holdPolygonTokens(options:{limit:30}){
-            name
-            symbol
-            tokenCount
-            contract
+              name
+              symbol
+              tokenCount
+              contract
           }
-        }
       }
-    `;
+  }`
+  ;
   
     try {
       const response = await axios.post(
