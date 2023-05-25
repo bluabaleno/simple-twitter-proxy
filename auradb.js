@@ -358,10 +358,7 @@ async function newInitialGraph(sessionName) {
 async function addEntitiesToAddress(data) {
   const session = driver.session();
   const transaction = session.beginTransaction();
-  const address = data[0].address;
-  const ens = data[0].ens;
-  console.log('addEntitiesToAddress called with address', address, 'and ens', ens);
-  
+  const address = data[0].address;  
   try {
     const entities = [];
 
@@ -441,7 +438,6 @@ async function addEntitiesToAddress(data) {
           ${mergeQuery}
           WITH e
           MERGE (n:Address {address: $address})
-          ON CREATE SET n.ens = $ens
           MERGE (n)-[:${relationship}]->(e)
         `,
         { ...entity, address: address, ens: data.ens }
