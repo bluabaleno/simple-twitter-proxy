@@ -49,6 +49,10 @@ module.exports = function(app) {
             tokenCount
             contract
           }
+          ens {limit:1} {
+            address
+            ens 
+          }
         }
       }
     `;
