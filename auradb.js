@@ -362,95 +362,95 @@ async function addEntitiesToAddress(data) {
   const ens = data.addrs[0].ens;
   console.log('addEntitiesToAddress called with address', address, 'and ens', ens);
   
-  // try {
-  //   const entities = [];
+  try {
+    const entities = [];
 
-  //   // Transform Tokens
-  //   data.addrs[0].holdTokens?.forEach(token => {
-  //     entities.push({
-  //       type: 'Token',
-  //       name: token.name,
-  //       symbol: token.symbol
-  //     });
-  //   });
+    // Transform Tokens
+    data.addrs[0].holdTokens?.forEach(token => {
+      entities.push({
+        type: 'Token',
+        name: token.name,
+        symbol: token.symbol
+      });
+    });
 
-  //   // Transform NFTs
-  //   data.addrs[0].holdNfts?.forEach(nft => {
-  //     entities.push({
-  //       type: 'NFT',
-  //       name: nft.name,
-  //       symbol: nft.symbol
-  //     });
-  //   });
+    // Transform NFTs
+    data.addrs[0].holdNfts?.forEach(nft => {
+      entities.push({
+        type: 'NFT',
+        name: nft.name,
+        symbol: nft.symbol
+      });
+    });
 
-  //   // Transform Events
-  //   data.addrs[0].attendEvents?.forEach(events => {
-  //     entities.push({
-  //       type: 'Events',
-  //       name: events.name,
-  //       id: events.id,
-  //     });
-  //   });
+    // Transform Events
+    data.addrs[0].attendEvents?.forEach(events => {
+      entities.push({
+        type: 'Events',
+        name: events.name,
+        id: events.id,
+      });
+    });
 
-  //   // Transform PolygonNFTs
-  //   data.addrs[0].holdPolygonNfts?.forEach(polygonNft => {
-  //     entities.push({
-  //       type: 'PolygonNFT',
-  //       name: polygonNft.name,
-  //       symbol: polygonNft.symbol,
-  //       nftCount: polygonNft.nftCount,
-  //       contract: polygonNft.contract
-  //     });
-  //   });
+    // Transform PolygonNFTs
+    data.addrs[0].holdPolygonNfts?.forEach(polygonNft => {
+      entities.push({
+        type: 'PolygonNFT',
+        name: polygonNft.name,
+        symbol: polygonNft.symbol,
+        nftCount: polygonNft.nftCount,
+        contract: polygonNft.contract
+      });
+    });
 
-  //   // Transform PolygonTokens
-  //   data.addrs[0].holdPolygonTokens?.forEach(polygonToken => {
-  //     entities.push({
-  //       type: 'PolygonToken',
-  //       name: polygonToken.name,
-  //       symbol: polygonToken.symbol,
-  //       tokenCount: polygonToken.tokenCount,
-  //       contract: polygonToken.contract
-  //     });
-  //   });
+    // Transform PolygonTokens
+    data.addrs[0].holdPolygonTokens?.forEach(polygonToken => {
+      entities.push({
+        type: 'PolygonToken',
+        name: polygonToken.name,
+        symbol: polygonToken.symbol,
+        tokenCount: polygonToken.tokenCount,
+        contract: polygonToken.contract
+      });
+    });
 
-  //   // Process each entity
-  //   for (const entity of entities) {
-  //     let mergeQuery = "";
-  //     let relationship = "";
+    // Process each entity
+    for (const entity of entities) {
+      let mergeQuery = "";
+      let relationship = "";
 
-  //     switch(entity.type) {
-  //       case 'Token':
-  //       case 'NFT':
-  //         mergeQuery = `MERGE (e:${entity.type} {symbol: $symbol}) ON CREATE SET e.name = $name`;
-  //         relationship = 'HOLDS';
-  //         break;
-  //       case 'Events':
-  //         mergeQuery = `MERGE (e:${entity.type} {id: $id}) ON CREATE SET e.name = $name`;
-  //         relationship = 'ATTENDED';
-  //         break;
-  //       case 'PolygonNFT':
-  //       case 'PolygonToken':
-  //         mergeQuery = `MERGE (e:${entity.type} {contract: $contract}) ON CREATE SET e.name = $name, e.symbol = $symbol, e.nftCount = $nftCount, e.tokenCount = $tokenCount`;
-  //         relationship = 'HOLDS_ON_POLYGON';
-  //         break;
-  //     }      
+      switch(entity.type) {
+        case 'Token':
+        case 'NFT':
+          mergeQuery = `MERGE (e:${entity.type} {symbol: $symbol}) ON CREATE SET e.name = $name`;
+          relationship = 'HOLDS';
+          break;
+        case 'Events':
+          mergeQuery = `MERGE (e:${entity.type} {id: $id}) ON CREATE SET e.name = $name`;
+          relationship = 'ATTENDED';
+          break;
+        case 'PolygonNFT':
+        case 'PolygonToken':
+          mergeQuery = `MERGE (e:${entity.type} {contract: $contract}) ON CREATE SET e.name = $name, e.symbol = $symbol, e.nftCount = $nftCount, e.tokenCount = $tokenCount`;
+          relationship = 'HOLDS_ON_POLYGON';
+          break;
+      }      
 
-  //     await transaction.run(
-  //       `
-  //         ${mergeQuery}
-  //         WITH e
-  //         MERGE (n:Address {address: $address})
-  //         ON CREATE SET n.ens = $ens
-  //         MERGE (n)-[:${relationship}]->(e)
-  //       `,
-  //       { ...entity, address: address, ens: data.ens }
-  //     );
-  //   }
+      await transaction.run(
+        `
+          ${mergeQuery}
+          WITH e
+          MERGE (n:Address {address: $address})
+          ON CREATE SET n.ens = $ens
+          MERGE (n)-[:${relationship}]->(e)
+        `,
+        { ...entity, address: address, ens: data.ens }
+      );
+    }
 
-  //   // Commit the transaction
-  //   await transaction.commit();
-  //   console.log(`Entities added to address ${address}`);
+    // Commit the transaction
+    await transaction.commit();
+    console.log(`Entities added to address ${address}`);
 
   } catch (err) {
     console.error(`Error adding entities to address ${address}: `, err);
