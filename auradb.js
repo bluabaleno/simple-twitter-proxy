@@ -409,7 +409,7 @@ async function addEntitiesToAddress(data) {
         type: 'PolygonToken',
         name: polygonToken.name,
         symbol: polygonToken.symbol,
-        tokenCount: polygonToken.tokenCount,
+        // tokenCount: polygonToken.tokenCount,
         contract: polygonToken.contract
       });
     });
