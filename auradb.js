@@ -360,6 +360,7 @@ async function addEntitiesToAddress(data) {
   const transaction = session.beginTransaction();
   const address = data.addrs[0].address;
   const ens = data.addrs[0].ens;
+  console.log('addEntitiesToAddress called with address', address, 'and ens', ens);
   
   try {
     const entities = [];
