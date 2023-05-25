@@ -365,7 +365,7 @@ async function addEntitiesToAddress(data) {
     const entities = [];
 
     // Transform Tokens
-    data.holdTokens?.forEach(token => {
+    data.addrs[0].holdTokens?.forEach(token => {
       entities.push({
         type: 'Token',
         name: token.name,
@@ -374,7 +374,7 @@ async function addEntitiesToAddress(data) {
     });
 
     // Transform NFTs
-    data.holdNfts?.forEach(nft => {
+    data.addrs[0].holdNfts?.forEach(nft => {
       entities.push({
         type: 'NFT',
         name: nft.name,
@@ -383,7 +383,7 @@ async function addEntitiesToAddress(data) {
     });
 
     // Transform Events
-    data.attendEvents?.forEach(events => {
+    data.addrs[0].attendEvents?.forEach(events => {
       entities.push({
         type: 'Events',
         name: events.name,
@@ -392,7 +392,7 @@ async function addEntitiesToAddress(data) {
     });
 
     // Transform PolygonNFTs
-    data.holdPolygonNfts?.forEach(polygonNft => {
+    data.addrs[0].holdPolygonNfts?.forEach(polygonNft => {
       entities.push({
         type: 'PolygonNFT',
         name: polygonNft.name,
@@ -403,7 +403,7 @@ async function addEntitiesToAddress(data) {
     });
 
     // Transform PolygonTokens
-    data.holdPolygonTokens?.forEach(polygonToken => {
+    data.addrs[0].holdPolygonTokens?.forEach(polygonToken => {
       entities.push({
         type: 'PolygonToken',
         name: polygonToken.name,
@@ -449,6 +449,7 @@ async function addEntitiesToAddress(data) {
 
     // Commit the transaction
     await transaction.commit();
+    console.log(`Entities added to address ${address}`);
 
   } catch (err) {
     console.error(`Error adding entities to address ${address}: `, err);

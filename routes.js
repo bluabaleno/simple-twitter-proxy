@@ -209,7 +209,7 @@ router.get('/common/:username', async (req, res) => {
       console.log('Entities data:', JSON.stringify(data.entities, null, 2));
 
       // Assuming data contains all the necessary entities in the right format
-      await db.addEntitiesToAddress(req.query.address, data.entities);
+      await db.addEntitiesToAddress(data);
 
         
       res.status(200).send(`User ${req.query.address} added to session ${req.params.sessionName}`); 
