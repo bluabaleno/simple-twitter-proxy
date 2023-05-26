@@ -472,5 +472,36 @@ async function addEntitiesToAddress(data) {
   }
 }
 
+async function addAddressToSession(address, sessionName) {
+  const session = driver.session();
+  const transaction = session.beginTransaction();
 
-module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB, addFollowsRelationships, addEntitiesToAddress };
+  try {
+    await transaction.run(
+      `
+        MATCH (a:Address {address: $address})
+        MERGE (s:Session {name: $sessionName})
+        MERGE (s)-[:HAS_PARTICIPANT]->(a)
+      `,
+      { address: address, sessionName: sessionName }
+    );
+
+    // Commit the transaction
+    await transaction.commit();
+    console.log(`Address ${address} added to session ${sessionName}`);
+
+  } catch (err) {
+    console.error(`Error adding address ${address} to session ${sessionName}: `, err);
+
+    // In case of error, discard the transaction
+    await transaction.rollback();
+    throw err;
+
+  } finally {
+    session.close();
+  }
+}
+
+
+
+module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB, addFollowsRelationships, addEntitiesToAddress, addAddressToSession };
