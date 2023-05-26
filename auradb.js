@@ -443,16 +443,18 @@ async function addEntitiesToAddress(data) {
       } 
 
 
+      let setNameQuery = ens ? 'SET n.name = $ens' : '';
+
       await transaction.run(
-        `
-          ${mergeQuery}
-          WITH e
-          MERGE (n:Address {address: $address})
-          ON CREATE SET n.name = $ens, n.timestamp = $timestamp, n.timestampLocal = $formattedTimestampLocal
-          MERGE (n)-[:${relationship}]->(e)
-        `,
-        { ...entity, address: address, ens: ens, timestamp: timestamp, formattedTimestampLocal: formattedTimestampLocal }
-        );
+          `
+            ${mergeQuery}
+            WITH e
+            MERGE (n:Address {address: $address})
+            ${setNameQuery}
+            MERGE (n)-[:${relationship}]->(e)
+          `,
+          { ...entity, address: address, ens: ens }
+      );      
     }
 
     // Commit the transaction
