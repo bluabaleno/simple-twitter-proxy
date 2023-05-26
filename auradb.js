@@ -445,7 +445,7 @@ async function addEntitiesToAddress(data) {
           ${mergeQuery}
           WITH e
           MERGE (n:Address {address: $address})
-          ON CREATE SET n.ens = $ens
+          ON CREATE SET n.name = $ens
           MERGE (n)-[:${relationship}]->(e)
         `,
         { ...entity, address: address, ens: ens }
