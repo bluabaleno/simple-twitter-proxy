@@ -398,7 +398,7 @@ async function addEntitiesToAddress(data) {
         type: 'PolygonNFT',
         name: polygonNft.name,
         symbol: polygonNft.symbol,
-        nftCount: String(polygonNft.nftCount),
+        nftCount: String(polygonNft.nftCount || ""),
         contract: polygonNft.contract
       });
     });
@@ -409,7 +409,7 @@ async function addEntitiesToAddress(data) {
         type: 'PolygonToken',
         name: polygonToken.name,
         symbol: polygonToken.symbol,
-        tokenCount: String(polygonToken.tokenCount),
+        tokenCount: String(polygonToken.tokenCount || ""),
         contract: polygonToken.contract
       });
     });
