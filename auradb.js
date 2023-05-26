@@ -448,7 +448,7 @@ async function addEntitiesToAddress(data) {
           ON CREATE SET n.ens = $ens
           MERGE (n)-[:${relationship}]->(e)
         `,
-        { ...entity, address: address, name: ens }
+        { ...entity, address: address, ens: ens }
         );
     }
 
