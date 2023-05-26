@@ -356,6 +356,9 @@ async function newInitialGraph(sessionName) {
 }
 
 async function addEntitiesToAddress(data) {
+  const now = new Date();
+  const timestamp = Math.floor(now.getTime() / 1000);
+  const formattedTimestampLocal = now.toISOString().replace('T', ' ').substr(0, 19);
   const session = driver.session();
   const transaction = session.beginTransaction();
   const address = data[0].address;
@@ -445,10 +448,10 @@ async function addEntitiesToAddress(data) {
           ${mergeQuery}
           WITH e
           MERGE (n:Address {address: $address})
-          ON CREATE SET n.name = $ens
+          ON CREATE SET n.name = $ens, n.timestamp = $timestamp, n.timestampLocal = $formattedTimestampLocal
           MERGE (n)-[:${relationship}]->(e)
         `,
-        { ...entity, address: address, ens: ens }
+        { ...entity, address: address, ens: ens, timestamp: timestamp, formattedTimestampLocal: formattedTimestampLocal }
         );
     }
 
