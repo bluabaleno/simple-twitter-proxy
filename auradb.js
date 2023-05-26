@@ -359,7 +359,7 @@ async function addEntitiesToAddress(data) {
   const session = driver.session();
   const transaction = session.beginTransaction();
   const address = data[0].address;
-  const ens = data[0].ens;
+  const ens = data[0].ens[0];
   console.log('addEntitiesToAddress called with address', address, 'and ens', ens);
   
   try {
