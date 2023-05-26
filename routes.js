@@ -208,10 +208,13 @@ router.get('/common/:username', async (req, res) => {
       
       const data = await query_data(req.query.address);
       console.log('data', data)
-
+      
       // Assuming data contains all the necessary entities in the right format
       await db.addEntitiesToAddress(data);
 
+      const address = data[0].address;
+      console.log('address', address)
+      await db.addAddressToSession(address, req.params.sessionName);
         
       res.status(200).send(`User ${req.query.address} added to session ${req.params.sessionName}`); 
     } catch (err) {
