@@ -363,6 +363,7 @@ async function addEntitiesToAddress(data) {
   const transaction = session.beginTransaction();
   const address = data[0].address;
   const ens = data[0].ens[0];
+  let setNameQuery = ens ? 'n.name = $ens,' : '';
   console.log('addEntitiesToAddress called with address', address, 'and ens', ens);
   
   try {
@@ -443,18 +444,16 @@ async function addEntitiesToAddress(data) {
       } 
 
 
-      let setNameQuery = ens ? 'SET n.name = $ens' : '';
-
       await transaction.run(
-          `
-            ${mergeQuery}
-            WITH e
-            MERGE (n:Address {address: $address})
-            ${setNameQuery}
-            MERGE (n)-[:${relationship}]->(e)
-          `,
-          { ...entity, address: address, ens: ens }
-      );      
+        `
+          ${mergeQuery}
+          WITH e
+          MERGE (n:Address {address: $address})
+          ON CREATE SET ${setNameQuery} n.timestamp = $timestamp, n.timestampLocal = $formattedTimestampLocal
+          MERGE (n)-[:${relationship}]->(e)
+        `,
+        { ...entity, address: address, ens: ens, timestamp: timestamp, formattedTimestampLocal: formattedTimestampLocal }
+      );
     }
 
     // Commit the transaction
