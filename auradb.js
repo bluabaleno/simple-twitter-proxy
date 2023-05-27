@@ -288,57 +288,62 @@ async function newInitialGraph(sessionName) {
   console.log('newInitialGraph called');
   const session = driver.session();
   const cypherQuery = `
-    MATCH (s:Session {name: $sessionName})-[:HAS_PARTICIPANT]->(p)
-    WHERE p:Person OR p:Address
-    WITH collect(p) as participants
-    UNWIND participants as p1
-    UNWIND participants as p2
-    WHERE id(p1) < id(p2) 
-    OPTIONAL MATCH (p1)-[r:HOLDS|HOLDS_ON_POLYGON|ATTENDED]->(common)<-[:HOLDS|HOLDS_ON_POLYGON|ATTENDED]-(p2)
-    WITH p1, p2, common, collect({node1: p1, relationship: type(r), node2: common}) as rels1, collect({node1: common, relationship: type(r), node2: p2}) as rels2
-    RETURN p1, p2, common, rels1, rels2
+  MATCH (s:Session {name: $sessionName})-[:HAS_PARTICIPANT]->(p:Person)
+  WITH collect(p) as participants
+  UNWIND participants as p1
+  UNWIND participants as p2
+  WITH p1, p2
+  WHERE p1 <> p2
+  OPTIONAL MATCH (p1)-[:FOLLOWS]->(commonFriend:Person)<-[:FOLLOWS]-(p2)
+  WITH p1, p2, commonFriend
+  RETURN p1, p2, commonFriend
   `;
 
   const fetchedData = [];
 
   try {
     const result = await session.run(cypherQuery, { sessionName: sessionName });
+    // console.log('result.records', result.records);
 
     result.records.forEach((record) => {
       const participant1Id = record.get('p1').identity.toInt();
       const participant2Id = record.get('p2').identity.toInt();
-      const commonEntityNode = record.get('common');
-      const commonEntityRelationships1 = record.get('rels1');
-      const commonEntityRelationships2 = record.get('rels2');
-
-      let commonEntity = null;
-      if (commonEntityNode) {
-        const commonEntityId = commonEntityNode.identity.toInt();
-        commonEntity = {
-          id: commonEntityId,
-          type: commonEntityNode.labels[0], // the type of the node
-          properties: commonEntityNode.properties,
-          relationships1: commonEntityRelationships1,
-          relationships2: commonEntityRelationships2,
+      const commonFriendNode = record.get('commonFriend');
+    
+      let commonFriend = null;
+      if (commonFriendNode) {
+        const commonFriendId = commonFriendNode.identity.toInt();
+        commonFriend = {
+          id: commonFriendId,
+          name: commonFriendNode.properties.name,
+          screen_name: commonFriendNode.properties.screen_name,
+          description: commonFriendNode.properties.description,
+          friends_count: commonFriendNode.properties.friends_count,
+          followers_count: commonFriendNode.properties.followers_count,
+          profile_image_url: commonFriendNode.properties.profile_image_url || 'src/twitter.png',
         };
       }
-
-      const participant1 = {
-        id: participant1Id,
-        type: record.get('p1').labels[0], // the type of the node
-        properties: record.get('p1').properties,
-      };
-
-      const participant2 = {
-        id: participant2Id,
-        type: record.get('p2').labels[0], // the type of the node
-        properties: record.get('p2').properties,
-      };
-
+    
       fetchedData.push({
-        participant1,
-        participant2,
-        commonEntity,
+        participant: {
+          id: participant1Id,
+          name: record.get('p1').properties.name,
+          screen_name: record.get('p1').properties.screen_name,
+          description: record.get('p1').properties.description,
+          friends_count: record.get('p1').properties.friends_count,
+          followers_count: record.get('p1').properties.followers_count,
+          profile_image_url: record.get('p1').properties.profile_image_url || 'src/twitter.png',
+        },
+        otherParticipant: {
+          id: participant2Id,
+          name: record.get('p2').properties.name,
+          screen_name: record.get('p2').properties.screen_name,
+          description: record.get('p2').properties.description,
+          friends_count: record.get('p2').properties.friends_count,
+          followers_count: record.get('p2').properties.followers_count,
+          profile_image_url: record.get('p2').properties.profile_image_url || 'src/twitter.png',
+        },
+        commonFriend: commonFriend,
       });
     });
   } catch (error) {
@@ -349,7 +354,6 @@ async function newInitialGraph(sessionName) {
   }
   return fetchedData;
 }
-
 
 async function addEntitiesToAddress(data) {
   const now = new Date();
