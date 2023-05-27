@@ -201,33 +201,39 @@ router.get('/common/:username', async (req, res) => {
     }
   });
 
-  router.post('/session/:sessionName/addAddress', async (req, res) => {
-    console.log('route reached', req.query);
-    try {
-      console.log(`Adding user ${req.query.address} to session ${req.params.sessionName}`);
-      
-      const data = await query_data(req.query.address);
-      console.log('data', data)
-      
-      // Assuming data contains all the necessary entities in the right format
-      await db.addEntitiesToAddress(data);
+router.post('/session/:sessionName/addAddress', async (req, res) => {
+  console.log('route reached', req.query);
+  try {
+    const sessionName = req.params.sessionName;
+    console.log(`Adding user ${req.query.address} to session ${sessionName}`);
 
-      const address = data[0].address;
-      console.log('address', address)
-      await db.addAddressToSession(address, req.params.sessionName);
-        
-      res.status(200).send(`User ${req.query.address} added to session ${req.params.sessionName}`); 
-    } catch (err) {
-      console.error(`Error adding user ${req.query.address} to session ${req.params.sessionName}`);
-      res.status(500).send(`Error adding user ${req.query.address} to session ${req.params.sessionName}`);
-    }
-  });
-  
+    // Ensure the session exists in the database
+    await db.ensureSessionExists(sessionName);
 
+    const data = await query_data(req.query.address);
+    console.log('data', data)
+    
+    // Assuming data contains all the necessary entities in the right format
+    await db.addEntitiesToAddress(data);
+
+    const address = data[0].address;
+    console.log('address', address)
+    await db.addAddressToSession(address, sessionName);
+      
+    res.status(200).send(`User ${req.query.address} added to session ${sessionName}`); 
+  } catch (err) {
+    console.error(`Error adding user ${req.query.address} to session ${sessionName}`);
+    res.status(500).send(`Error adding user ${req.query.address} to session ${sessionName}`);
+  }
+});
 
 router.get('/session/:sessionName/addUser', async (req, res) => {
   try {
-    console.log(`Adding user ${req.query.username} to session ${req.params.sessionName}`);
+    const sessionName = req.params.sessionName;
+    console.log(`Adding user ${req.query.username} to session ${sessionName}`);
+
+    // Ensure the session exists in the database
+    await db.ensureSessionExists(sessionName);
 
     const userInfo = await T.get('users/lookup', { screen_name: req.query.username });
     const userId = userInfo.data[0].id_str;
@@ -258,15 +264,16 @@ router.get('/session/:sessionName/addUser', async (req, res) => {
       console.log('Data fetched and saved');
     }
 
-    await db.addParticipantToSession(userId, req.params.sessionName);
-    const newData = await db.addParticipantAndFetchNewData(userId, req.params.sessionName);
+    await db.addParticipantToSession(userId, sessionName);
+    const newData = await db.addParticipantAndFetchNewData(userId, sessionName);
     io.emit('new data', newData);
-    res.status(200).send(`User ${req.query.username} added to session ${req.params.sessionName}`);
+    res.status(200).send(`User ${req.query.username} added to session ${sessionName}`);
   } catch (err) {
     console.error(err);
     res.status(500).send('An error occurred while adding the user to the session.');
   }
 });
+
 
 return router;
 

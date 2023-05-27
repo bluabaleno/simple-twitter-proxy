@@ -390,7 +390,7 @@ async function addEntitiesToAddress(data) {
     // Transform Events
     data[0].attendEvents?.forEach(events => {
       entities.push({
-        type: 'Events',
+        type: 'Event',
         name: events.name,
         id: events.id,
       });
@@ -429,7 +429,7 @@ async function addEntitiesToAddress(data) {
           mergeQuery = `MERGE (e:${entity.type} {symbol: $symbol}) ON CREATE SET e.name = $name`;
           relationship = 'HOLDS';
           break;
-        case 'Events':
+        case 'Event':
           mergeQuery = `MERGE (e:${entity.type} {id: $id}) ON CREATE SET e.name = $name`;
           relationship = 'ATTENDED';
           break;
@@ -502,6 +502,28 @@ async function addAddressToSession(address, sessionName) {
   }
 }
 
+async function ensureSessionExists(sessionName) {
+  const session = driver.session();
+  let result;
+
+  try {
+    result = await session.run(
+      `
+      MERGE (s:Session {name: $sessionName})
+      RETURN s
+      `, 
+      { sessionName: sessionName }
+    );
+  } catch (error) {
+    console.error(`Error ensuring session exists: ${error}`);
+  } finally {
+    await session.close();
+  }
+  
+  return result.records[0]?.get('s');
+}
 
 
-module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB, addFollowsRelationships, addEntitiesToAddress, addAddressToSession };
+
+
+module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB, addFollowsRelationships, addEntitiesToAddress, addAddressToSession, ensureSessionExists };
