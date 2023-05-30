@@ -288,15 +288,16 @@ async function newInitialGraph(sessionName) {
   console.log('newInitialGraph called');
   const session = driver.session();
   const cypherQuery = `
-    MATCH (s:Session {name: $sessionName})-[:HAS_PARTICIPANT]->(p)
-    WHERE p:Person OR p:Address
-    WITH collect(p) as participants
-    UNWIND participants as p1
-    UNWIND participants as p2
-    WHERE id(p1) < id(p2) 
-    OPTIONAL MATCH (p1)-[r:HOLDS|HOLDS_ON_POLYGON|ATTENDED]->(common)<-[:HOLDS|HOLDS_ON_POLYGON|ATTENDED]-(p2)
-    WITH p1, p2, common, collect({node1: p1, relationship: type(r), node2: common}) as rels1, collect({node1: common, relationship: type(r), node2: p2}) as rels2
-    RETURN p1, p2, common, rels1, rels2
+  MATCH (s:Session {name: 'avaxsummit'})-[:HAS_PARTICIPANT]->(p)
+  WHERE p:Person OR p:Address
+  WITH collect(p) as participants
+  UNWIND participants as p1
+  UNWIND participants as p2
+  WITH p1, p2
+  WHERE id(p1) < id(p2)
+  OPTIONAL MATCH (p1)-[r1:HOLDS|HOLDS_ON_POLYGON|ATTENDED|FOLLOWS]->(common)<-[r2:HOLDS|HOLDS_ON_POLYGON|ATTENDED|FOLLOWS]-(p2)
+  WITH p1, p2, common, collect({node1: p1, relationship: type(r1), node2: common}) as rels1, collect({node1: common, relationship: type(r2), node2: p2}) as rels2
+  RETURN p1, p2, common, rels1, rels2
   `;
 
   const fetchedData = [];
