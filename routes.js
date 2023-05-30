@@ -265,7 +265,7 @@ router.get('/session/:sessionName/addUser', async (req, res) => {
     }
 
     await db.addParticipantToSession(userId, sessionName);
-    const newData = await db.addParticipantAndFetchNewData(userId, sessionName);
+    const newData = await db.newInitialGraph(sessionName);
     io.emit('new data', newData);
     res.status(200).send(`User ${req.query.username} added to session ${sessionName}`);
   } catch (err) {
