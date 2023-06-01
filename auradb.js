@@ -21,41 +21,41 @@ async function addParticipantToSession(participantId, sessionName) {
   console.log('Participant added to session', participantId, sessionName);
 }
 
-// Commented out beacuse I replace it with just calling newInitialGraph again. technically this is more efficient. 
-// async function addParticipantAndFetchNewData(participantId, sessionName) {
-//   const session = driver.session();
-//   const cypherQuery = `
-//   MATCH (p:Person {id: $participantId}), (s:Session {name: $sessionName})
-//   MATCH (s)-[:HAS_PARTICIPANT]->(otherParticipant:Person)
-//   WHERE otherParticipant <> p
-//   MATCH (p)-[:FOLLOWS]->(commonFriend:Person)<-[:FOLLOWS]-(otherParticipant)
-//   RETURN p, otherParticipant, commonFriend  
-//   `;
+// Merged addParticipantAndFetchNewData function
+async function addParticipantAndFetchNewData(participantId, sessionName) {
+  const session = driver.session();
+  const cypherQuery = `
+  MATCH (p:Person {id: $participantId}), (s:Session {name: $sessionName})
+  MATCH (s)-[:HAS_PARTICIPANT]->(otherParticipant:Person)
+  WHERE otherParticipant <> p
+  MATCH (p)-[:FOLLOWS]->(commonFriend:Person)<-[:FOLLOWS]-(otherParticipant)
+  RETURN p, otherParticipant, commonFriend  
+  `;
 
-//   try {
-//     const result = await session.run(cypherQuery, { participantId, sessionName });
-//     const newData = result.records.map((record) => ({
-//       participant: {
-//         ...record.get('p').properties,
-//         id: record.get('p').identity.toInt(),
-//       },
-//       otherParticipant: {
-//         ...record.get('otherParticipant').properties,
-//         id: record.get('otherParticipant').identity.toInt(),
-//       },
-//       commonFriend: {
-//         ...record.get('commonFriend').properties,
-//         id: record.get('commonFriend').identity.toInt(),
-//       },
-//     }));
+  try {
+    const result = await session.run(cypherQuery, { participantId, sessionName });
+    const newData = result.records.map((record) => ({
+      participant: {
+        ...record.get('p').properties,
+        id: record.get('p').identity.toInt(),
+      },
+      otherParticipant: {
+        ...record.get('otherParticipant').properties,
+        id: record.get('otherParticipant').identity.toInt(),
+      },
+      commonFriend: {
+        ...record.get('commonFriend').properties,
+        id: record.get('commonFriend').identity.toInt(),
+      },
+    }));
 
-//     return newData;
-//   } catch (error) {
-//     console.error(error);
-//   } finally {
-//     session.close();
-//   }
-// }
+    return newData;
+  } catch (error) {
+    console.error(error);
+  } finally {
+    session.close();
+  }
+}
 
 const saveCommonUsersToNeo4j = async (commonUsersInfo) => {
   const session = driver.session();
@@ -288,72 +288,81 @@ async function newInitialGraph(sessionName) {
   console.log('newInitialGraph called');
   const session = driver.session();
   const cypherQuery = `
-  MATCH (s:Session {name: $sessionName})-[:HAS_PARTICIPANT]->(p:Person)
-  WITH collect(p) as participants
-  UNWIND participants as p1
-  UNWIND participants as p2
-  WITH p1, p2
-  WHERE p1 <> p2
-  OPTIONAL MATCH (p1)-[:FOLLOWS]->(commonFriend:Person)<-[:FOLLOWS]-(p2)
-  WITH p1, p2, commonFriend
-  RETURN p1, p2, commonFriend
+    MATCH (s:Session {name: $sessionName})-[:HAS_PARTICIPANT]->(p)
+    WHERE p:Person OR p:Address
+    WITH collect(p) as participants
+    UNWIND participants as p1
+    UNWIND participants as p2
+    WITH p1, p2
+    WHERE id(p1) < id(p2)
+    OPTIONAL MATCH path=(p1)-[r1:HOLDS|HOLDS_ON_POLYGON|ATTENDED|FOLLOWS]->(common)<-[r2:HOLDS|HOLDS_ON_POLYGON|ATTENDED|FOLLOWS]-(p2)
+    RETURN p1, p2, common, relationships(path) as rels
   `;
 
-  const fetchedData = [];
+  const participantNodes = new Map();
+  const commonEntityNodes = new Map();
+  const fetchedRelationships = [];
 
   try {
     const result = await session.run(cypherQuery, { sessionName: sessionName });
-    // console.log('result.records', result.records);
 
     result.records.forEach((record) => {
-      const participant1Id = record.get('p1').identity.toInt();
-      const participant2Id = record.get('p2').identity.toInt();
-      const commonFriendNode = record.get('commonFriend');
-    
-      let commonFriend = null;
-      if (commonFriendNode) {
-        const commonFriendId = commonFriendNode.identity.toInt();
-        commonFriend = {
-          id: commonFriendId,
-          name: commonFriendNode.properties.name,
-          screen_name: commonFriendNode.properties.screen_name,
-          description: commonFriendNode.properties.description,
-          friends_count: commonFriendNode.properties.friends_count,
-          followers_count: commonFriendNode.properties.followers_count,
-          profile_image_url: commonFriendNode.properties.profile_image_url || 'src/twitter.png',
-        };
-      }
-    
-      fetchedData.push({
-        participant: {
-          id: participant1Id,
-          name: record.get('p1').properties.name,
-          screen_name: record.get('p1').properties.screen_name,
-          description: record.get('p1').properties.description,
-          friends_count: record.get('p1').properties.friends_count,
-          followers_count: record.get('p1').properties.followers_count,
-          profile_image_url: record.get('p1').properties.profile_image_url || 'src/twitter.png',
-        },
-        otherParticipant: {
-          id: participant2Id,
-          name: record.get('p2').properties.name,
-          screen_name: record.get('p2').properties.screen_name,
-          description: record.get('p2').properties.description,
-          friends_count: record.get('p2').properties.friends_count,
-          followers_count: record.get('p2').properties.followers_count,
-          profile_image_url: record.get('p2').properties.profile_image_url || 'src/twitter.png',
-        },
-        commonFriend: commonFriend,
+
+      const nodes = ['p1', 'p2'].map(nodeLabel => {
+        const node = record.get(nodeLabel);
+        if (node) {
+          const nodeId = node.identity.toInt();
+          const participantNode = {
+            id: nodeId,
+            type: node.labels[0],
+            properties: node.properties,
+          };
+          participantNodes.set(nodeId, participantNode);
+        }
+        return node;
       });
+
+
+      const commonEntityNode = record.get('common');
+      if (commonEntityNode) {
+        const nodeId = commonEntityNode.identity.toInt();
+        const commonNode = {
+          id: nodeId,
+          type: commonEntityNode.labels[0],
+          properties: commonEntityNode.properties,
+        };
+        commonEntityNodes.set(nodeId, commonNode);
+      }
+
+
+      const relationships = record.get('rels');
+      if (relationships) { // Skip processing if relationships are null
+        relationships.forEach(rel => {
+          fetchedRelationships.push({
+            source: rel.start,
+            target: rel.end,
+            relationship: rel.type,
+          });
+        });
+      }
+      
     });
+    console.log('finished processing cypher query results')
+    
   } catch (error) {
     console.log('Error executing cypher query');
     console.error(error);
   } finally {
     session.close();
   }
-  return fetchedData;
+  return { 
+    participantNodes: Array.from(participantNodes.values()), 
+    commonEntityNodes: Array.from(commonEntityNodes.values()), 
+    relationships: fetchedRelationships 
+  };
 }
+
+
 
 async function addEntitiesToAddress(data) {
   const now = new Date();
@@ -526,4 +535,4 @@ async function ensureSessionExists(sessionName) {
 
 
 
-module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addUserToAuraDB, addFollowsRelationships, addEntitiesToAddress, addAddressToSession, ensureSessionExists };
+module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB, addFollowsRelationships, addEntitiesToAddress, addAddressToSession, ensureSessionExists };

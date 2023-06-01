@@ -1,4 +1,4 @@
-  require('dotenv').config();
+require('dotenv').config();
 
 // routes.js
 module.exports = function(app) {
@@ -6,7 +6,7 @@ module.exports = function(app) {
   const router = express.Router();
   const Twit = require('twit');
   const db = require('./auradb');  // Import your database operations
-  const { saveCommonUsersToNeo4j, addParticipantToSession, addParticipantAndFetchNewData, checkIfUserExistsInAuraDB, addFollowsRelationships } = require('./auradb');
+  const { saveCommonUsersToNeo4j, addParticipantToSession, checkIfUserExistsInAuraDB, addFollowsRelationships } = require('./auradb');
   const axios = require('axios'); // Import axios if not done yet
   const graphql_endpoint = "https://master.graphql.knn3.xyz/graphql";
 
