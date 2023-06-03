@@ -314,7 +314,7 @@ async function newInitialGraph(sessionName) {
           const nodeId = node.identity.toInt();
           const participantNode = {
             id: nodeId,
-            type: node.labels[0],
+            label: node.labels[0],
             properties: node.properties,
           };
           participantNodes.set(nodeId, participantNode);
@@ -328,7 +328,7 @@ async function newInitialGraph(sessionName) {
         const nodeId = commonEntityNode.identity.toInt();
         const commonNode = {
           id: nodeId,
-          type: commonEntityNode.labels[0],
+          label: commonEntityNode.labels[0],
           properties: commonEntityNode.properties,
         };
         commonEntityNodes.set(nodeId, commonNode);
