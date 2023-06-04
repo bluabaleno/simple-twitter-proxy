@@ -296,7 +296,8 @@ async function newInitialGraph(sessionName) {
     WITH p1, p2
     WHERE id(p1) < id(p2)
     OPTIONAL MATCH path=(p1)-[r1:HOLDS|HOLDS_ON_POLYGON|ATTENDED|FOLLOWS]->(common)<-[r2:HOLDS|HOLDS_ON_POLYGON|ATTENDED|FOLLOWS]-(p2)
-    RETURN p1, p2, common, relationships(path) as rels
+    OPTIONAL MATCH partRel=(p1)-[r:FOLLOWS|OWNS]-(p2)
+    RETURN p1, p2, common, relationships(path) as rels, relationships(partRel) as partRels
   `;
 
   const participantNodes = new Map();
@@ -322,7 +323,6 @@ async function newInitialGraph(sessionName) {
         return node;
       });
 
-
       const commonEntityNode = record.get('common');
       if (commonEntityNode) {
         const nodeId = commonEntityNode.identity.toInt();
@@ -334,9 +334,8 @@ async function newInitialGraph(sessionName) {
         commonEntityNodes.set(nodeId, commonNode);
       }
 
-
       const relationships = record.get('rels');
-      if (relationships) { // Skip processing if relationships are null
+      if (relationships) { 
         relationships.forEach(rel => {
           fetchedRelationships.push({
             source: rel.start,
@@ -345,7 +344,18 @@ async function newInitialGraph(sessionName) {
           });
         });
       }
-      
+
+      const partRels = record.get('partRels');
+      if (partRels) { 
+        partRels.forEach(rel => {
+          fetchedRelationships.push({
+            source: rel.start,
+            target: rel.end,
+            relationship: rel.type,
+          });
+        });
+      }
+
     });
     console.log('finished processing cypher query results')
     
@@ -358,9 +368,10 @@ async function newInitialGraph(sessionName) {
   return { 
     participantNodes: Array.from(participantNodes.values()), 
     commonEntityNodes: Array.from(commonEntityNodes.values()), 
-    relationships: fetchedRelationships 
+    relationships: fetchedRelationships
   };
 }
+
 
 
 

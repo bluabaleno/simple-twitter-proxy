@@ -203,15 +203,16 @@ router.get('/common/:username', async (req, res) => {
 
 router.post('/session/:sessionName/addAddress', async (req, res) => {
   console.log('route reached', req.query);
+  const sessionName = req.params.sessionName;
+  const io = app.get('io');
   try {
-    const sessionName = req.params.sessionName;
     console.log(`Adding user ${req.query.address} to session ${sessionName}`);
 
     // Ensure the session exists in the database
     await db.ensureSessionExists(sessionName);
 
     const data = await query_data(req.query.address);
-    console.log('data', data)
+    console.log('processing KNN3 data')
     
     // Assuming data contains all the necessary entities in the right format
     await db.addEntitiesToAddress(data);
@@ -225,6 +226,8 @@ router.post('/session/:sessionName/addAddress', async (req, res) => {
     console.error(`Error adding user ${req.query.address} to session ${sessionName}`);
     res.status(500).send(`Error adding user ${req.query.address} to session ${sessionName}`);
   }
+  const newData = await db.newInitialGraph(sessionName);
+  io.emit('new data', newData);
 });
 
 router.get('/session/:sessionName/addUser', async (req, res) => {
