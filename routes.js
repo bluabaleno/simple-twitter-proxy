@@ -218,7 +218,6 @@ router.post('/session/:sessionName/addAddress', async (req, res) => {
     await db.addEntitiesToAddress(data);
 
     const address = data[0].address;
-    console.log('address', address)
     await db.addAddressToSession(address, sessionName);
       
     res.status(200).send(`User ${req.query.address} added to session ${sessionName}`); 
