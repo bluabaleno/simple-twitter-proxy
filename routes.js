@@ -11,6 +11,42 @@ module.exports = function(app) {
   const axios = require('axios'); // Import axios if not done yet
   const graphql_endpoint = "https://master.graphql.knn3.xyz/graphql";
 
+  const passport = require('passport');
+  const TwitterStrategy = require('passport-twitter').Strategy;
+
+  app.use(passport.initialize());
+
+  passport.use(new TwitterStrategy({
+    consumerKey: process.env.TWITTER_CONSUMER_KEY,
+    consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
+    callbackURL: "https://simple-twitter-server.herokuapp.com/twitter/callback",
+  },
+  function(token, tokenSecret, profile, done) {
+    console.log('Your access token:', token);
+    console.log('Your token secret:', tokenSecret);
+    done(null, profile);
+  }
+));
+
+  passport.serializeUser(function(user, done) {
+    done(null, user);
+  });
+
+  passport.deserializeUser(function(user, done) {
+    done(null, user);
+  });
+
+  // Initiate the login process
+  router.get('/twitter/login', passport.authenticate('twitter'));
+
+  // Handle the callback from Twitter
+  router.get('/twitter/callback', 
+    passport.authenticate('twitter', { failureRedirect: '/login' }),
+    function(req, res) {
+      // Successful authentication, redirect home.
+      res.redirect('/');
+    });
+
   const T = new Twit({
     consumer_key:         process.env.TWITTER_CONSUMER_KEY,
     consumer_secret:      process.env.TWITTER_CONSUMER_SECRET,
