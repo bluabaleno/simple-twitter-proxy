@@ -179,7 +179,7 @@ module.exports = function(app) {
   }
 
   async function sendToJSONBin(data) {
-    console.log(process.env.JSONBIN_SECRET_KEY)
+    console.log(process.env.TWITTER_ACCESS_TOKEN)
     try {
       const res = await axios.post('https://api.jsonbin.io/v3/b', data, {
         headers: {
