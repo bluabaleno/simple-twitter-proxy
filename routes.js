@@ -31,11 +31,15 @@ module.exports = function(app) {
     consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
     callbackURL: "https://simple-twitter-server.herokuapp.com/twitter/callback",
   },
-  function(token, tokenSecret, profile, done) {
-    console.log('Your access token:', token);
-    console.log('Your token secret:', tokenSecret);
-    console.log('Your profile:', profile)
-    done(null, profile);
+  async function(token, tokenSecret, profile, done) {
+    // This function is called when Twitter has returned to /twitter/callback
+    // You can save the tokens here
+    try {
+      await db.addUserToAuraDBwithOauth(profile._json, token, tokenSecret);
+      done(null, profile);
+    } catch (error) {
+      done(error);
+    }
   }
 ));
 

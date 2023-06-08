@@ -172,6 +172,69 @@ const addUserToAuraDB = async (userInfo) => {
   }
 };
 
+//has a lot of duplicate code with addUserToAuraDB
+const addUserToAuraDBwithOauth = async (userInfo, token, tokenSecret) => {
+  console.log(userInfo)
+  const session = driver.session();
+  const lastUpdated = Math.floor(Date.now() / 1000); // Get current UNIX timestamp
+  const lastUpdatedLocal = new Date().toLocaleString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+
+  try {
+    await session.writeTransaction(async (tx) => {
+      const userParam = {
+        id: String(userInfo.id),
+        name: userInfo.name,
+        screen_name: userInfo.screen_name.toLowerCase(),
+        description: userInfo.description,
+        profile_image_url: userInfo.profile_image_url,
+        created_at: userInfo.created_at,
+        verified: userInfo.verified,
+        followers_count: userInfo.followers_count,
+        friends_count: userInfo.friends_count,
+        lastUpdated: lastUpdated,
+        lastUpdatedLocal: lastUpdatedLocal,
+        oauth_token: token,
+        oauth_token_secret: tokenSecret
+      };
+
+      await tx.run(
+        `
+          MERGE (user:Person {id: $id})
+          SET user += {
+            name: $name,
+            screen_name: $screen_name,
+            description: $description,
+            profile_image_url: $profile_image_url,
+            created_at: $created_at,
+            verified: $verified,
+            followers_count: $followers_count,
+            friends_count: $friends_count,
+            lastUpdated: $lastUpdated,
+            lastUpdatedLocal: $lastUpdatedLocal,
+            oauth_token: $oauth_token,
+            oauth_token_secret: $oauth_token_secret
+          }
+        `,
+        userParam
+      );
+    });
+
+  } catch (error) {
+    console.error('An error occurred while saving data to AuraDB:', error);
+  } finally {
+    await session.close();
+  }
+};
+
+
 
 const addFollowsRelationships = async (userId, friendIds) => {
   const session = driver.session();
@@ -546,4 +609,4 @@ async function ensureSessionExists(sessionName) {
 
 
 
-module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB, addFollowsRelationships, addEntitiesToAddress, addAddressToSession, ensureSessionExists };
+module.exports = { saveCommonUsersToNeo4j, getSessionEndDate, logUserAddressAndScreenName, checkIfUserExistsInAuraDB, newInitialGraph, addParticipantToSession, addParticipantAndFetchNewData, addUserToAuraDB, addFollowsRelationships, addEntitiesToAddress, addAddressToSession, ensureSessionExists, addUserToAuraDBwithOauth };
