@@ -4,6 +4,7 @@ require('dotenv').config();
 module.exports = function(app) {
   const express = require('express');
   const router = express.Router();
+  router.use(express.json()); // Add this line
   const Twit = require('twit');
   const db = require('./auradb');  // Import your database operations
   const { saveCommonUsersToNeo4j, addParticipantToSession, checkIfUserExistsInAuraDB, addFollowsRelationships } = require('./auradb');
@@ -176,6 +177,37 @@ module.exports = function(app) {
     await saveCommonUsersToNeo4j(commonData);
     return commonData;
   }
+
+  async function sendToJSONBin(data) {
+    try {
+      const res = await axios.post('https://api.jsonbin.io/v3/b', data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': process.env.JSONBIN_SECRET_KEY,
+          'X-Bin-Private': 'false',
+        },
+      });
+      return res.data;
+    } catch (err) {
+      console.error(`Error sending data to JSONBin: ${err.message}`);
+      throw err;
+    }
+  }
+
+  router.post('/jsonbin', async (req, res) => {
+    try {
+      const data = req.body;
+      const response = await sendToJSONBin(data);
+      // Construct the URL of the bin and send it back to the client
+      const binUrl = `https://api.jsonbin.io/v3/b/${response.metadata.id}`;
+      console.log('binUrl', binUrl)
+      res.send(binUrl);
+    } catch (err) {
+      res.status(500).send(`Error sending data to JSONBin: ${err.message}`);
+    }
+  });
+  
+  
 
 router.get('/common/:username', async (req, res) => {
     try {
