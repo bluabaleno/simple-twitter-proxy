@@ -7,7 +7,7 @@ require('dotenv').config();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
   cors: {
-    origin: "https://myfrens.xyz",
+    origin: "http://myfrens.xyz",
     methods: ["GET", "POST"]
   }
 });
