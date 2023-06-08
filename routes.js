@@ -30,6 +30,7 @@ module.exports = function(app) {
     consumerKey: process.env.TWITTER_CONSUMER_KEY,
     consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
     callbackURL: "https://simple-twitter-server.herokuapp.com/twitter/callback",
+    passReqToCallback: true, // <--- Add this line
   },
   async function(token, tokenSecret, profile, done) {
     // This function is called when Twitter has returned to /twitter/callback
