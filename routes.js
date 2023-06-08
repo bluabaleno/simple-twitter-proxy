@@ -179,7 +179,6 @@ module.exports = function(app) {
   }
 
   async function sendToJSONBin(data) {
-    console.log(process.env.TWITTER_ACCESS_TOKEN)
     try {
       const res = await axios.post('https://api.jsonbin.io/v3/b', data, {
         headers: {
@@ -198,12 +197,9 @@ module.exports = function(app) {
   router.post('/jsonbin', async (req, res) => {
     try {
       const data = req.body;
-      console.log('data', data);
       const response = await sendToJSONBin(data);
-      console.log('response', response);
       // Construct the URL of the bin and send it back to the client
       const binUrl = `https://api.jsonbin.io/v3/b/${response.metadata.id}`;
-      console.log('binUrl', binUrl)
       res.send(binUrl);
     } catch (err) {
       res.status(500).send(`Error sending data to JSONBin: ${err.message}`);
