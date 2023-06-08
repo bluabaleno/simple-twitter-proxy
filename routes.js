@@ -4,6 +4,8 @@ require('dotenv').config();
 module.exports = function(app) {
   const express = require('express');
   const session = require('express-session');
+  const RedisStore = require('connect-redis')(session);
+  const redis = require('redis');
   const router = express.Router();
   router.use(express.json()); // Add this line
   const Twit = require('twit');
@@ -15,23 +17,33 @@ module.exports = function(app) {
   const passport = require('passport');
   const TwitterStrategy = require('passport-twitter').Strategy;
 
-  // Configure the session
+  let redisClient;
+
+  if (process.env.REDIS_URL) {
+    // If deploying on Heroku, Heroku will automatically provide the Redis addon's URL in process.env.REDIS_URL
+    redisClient = redis.createClient(process.env.REDIS_URL);
+  } else {
+    // In development environment, default Redis configuration is usually sufficient. No URL is necessary.
+    redisClient = redis.createClient();
+  }
+  
   app.use(session({
+    store: new RedisStore({ client: redisClient }),
     secret: 'testing kitties',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // set to false during local development
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+    },
   }));
-  
 
   app.use(passport.initialize());
   app.use(passport.session());
 
-  passport.use(new TwitterStrategy({
+passport.use(new TwitterStrategy({
     consumerKey: process.env.TWITTER_CONSUMER_KEY,
     consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
     callbackURL: "https://simple-twitter-server.herokuapp.com/twitter/callback",
-    passReqToCallback: true, // <--- Add this line
   },
   async function(token, tokenSecret, profile, done) {
     // This function is called when Twitter has returned to /twitter/callback
