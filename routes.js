@@ -3,6 +3,7 @@ require('dotenv').config();
 // routes.js
 module.exports = function(app) {
   const express = require('express');
+  const session = require('express-session');
   const router = express.Router();
   router.use(express.json()); // Add this line
   const Twit = require('twit');
@@ -14,7 +15,16 @@ module.exports = function(app) {
   const passport = require('passport');
   const TwitterStrategy = require('passport-twitter').Strategy;
 
+  // Configure the session
+  app.use(session({
+    secret: 'testing kitties',  // A random string do not disclose this to anyone
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: true }
+  }));
+
   app.use(passport.initialize());
+  app.use(passport.session());
 
   passport.use(new TwitterStrategy({
     consumerKey: process.env.TWITTER_CONSUMER_KEY,
