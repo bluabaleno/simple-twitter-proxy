@@ -4,7 +4,8 @@ require('dotenv').config();
 module.exports = function(app) {
   const express = require('express');
   const session = require('express-session');
-  const RedisStore = require('connect-redis')(session);
+  const connectRedis = require('connect-redis');
+  const RedisStore = connectRedis(session);
   const redis = require('redis');
   const router = express.Router();
   router.use(express.json()); // Add this line
