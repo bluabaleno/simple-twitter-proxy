@@ -34,6 +34,7 @@ module.exports = function(app) {
   function(token, tokenSecret, profile, done) {
     console.log('Your access token:', token);
     console.log('Your token secret:', tokenSecret);
+    console.log('Your profile:', profile)
     done(null, profile);
   }
 ));
