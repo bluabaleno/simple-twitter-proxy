@@ -17,11 +17,12 @@ module.exports = function(app) {
 
   // Configure the session
   app.use(session({
-    secret: 'testing kitties',  // A random string do not disclose this to anyone
+    secret: 'testing kitties',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: true }
+    cookie: { secure: false } // set to false during local development
   }));
+  
 
   app.use(passport.initialize());
   app.use(passport.session());
